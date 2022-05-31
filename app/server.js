@@ -1,3 +1,6 @@
+/**
+ * A Service to handle all the calls to the Database
+ */
 class APIService {
 
     url = "https://"
@@ -11,7 +14,7 @@ class APIService {
 
     async delayCall(millisecondsToWait) {
         await new Promise(res => setTimeout(res, millisecondsToWait))
-    } 
+    }
 
     async getEmojis() {
 
@@ -21,12 +24,12 @@ class APIService {
         try {
             emojiPromise = await new Promise((resolve, reject) => {
                 fetch(url)
-                .then(res => res.json())
-                .then(resolve)
-                .catch(reject)
+                    .then(res => res.json())
+                    .then(resolve)
+                    .catch(reject)
             })
         } catch (error) {
-            console.log(`%c couldn't load emojis. Got ${error}`,"color:red; font-weight:bold;")
+            console.log(`%c couldn't load emojis. Got ${error}`, "color:red; font-weight:bold;")
             console.table(error)
             // if we got the Random error, we just try again
             return this.getEmojis()
@@ -38,29 +41,29 @@ class APIService {
 
     }
 
-    async saveEmoji(emoji){
+    async saveEmoji(emoji) {
 
         try {
-            console.log(`%c let currentEmojis = this.getEmojis() ....`,'color:white; font-weight:bold')
+            console.log(`%c let currentEmojis = this.getEmojis() ....`, 'color:white; font-weight:bold')
             let emojis = await this.getEmojis()
-    
+
             emojis.push(emoji)
-            
+
 
             let emojiObject = {
                 id: "1",
                 emojis
             }
 
-            await this.connect("emoji","PUT",emojiObject)
+            await this.connect("emoji", "PUT", emojiObject)
 
-            
+
         } catch (error) {
-            console.log(`%c couldn't save emoji. Got ${error}`,"color:red; font-weight:bold;")
+            console.log(`%c couldn't save emoji. Got ${error}`, "color:red; font-weight:bold;")
             console.table(error)
 
             // try again
-            setTimeout(this.saveEmoji(emoji),5000);
+            setTimeout(this.saveEmoji(emoji), 5000);
         }
 
     }
@@ -69,12 +72,14 @@ class APIService {
 
         let hasData, targetKnown = true
 
-        let s = data // JSON.stringify(data)
+        // handle optional parameter "data"
+        let s = data
         console.log(`s = ${s} \n s is ${s.length} long`)
         console.table([s])
         s ? hasData = true : hasData = false
         console.log(`hasData = ${hasData}`)
 
+        // prepare fetch-url
         let url = this.url
 
         switch (target) {
@@ -92,6 +97,7 @@ class APIService {
                 break;
         }
 
+        // prepare fetch-options
         let options = {
             method: mode,
             body: JSON.stringify(data),
@@ -99,7 +105,8 @@ class APIService {
                 'Content-Type': 'application/json'
             }
         }
-    
+
+        // execute call depending on input
         if (hasData && targetKnown) {
             console.log(`=> hasData && targetKnown (${target})`)
             console.log(`fetch ${mode} from url ${url}`)
@@ -107,36 +114,38 @@ class APIService {
                 .then(res => res.json())
                 .then(res => console.log(res))
                 .catch(error => {
-                    console.log(`%c couldn't ${mode} ${target}. Got ${error}`,"color:red; font-weight:bold;")
+                    console.log(`%c couldn't ${mode} ${target}. Got ${error}`, "color:red; font-weight:bold;")
                     console.table(error)
-          
+
                     console.log("retrying in 5 seconds...")
-                    setTimeout(()=>{this.connect(target,mode,data)},5000)
+                    setTimeout(() => {
+                        this.connect(target, mode, data)
+                    }, 5000)
                 })
         } else if (mode == 'GET' && targetKnown) {
             console.log(`=> GET && targetKown (${target})`)
             console.log(`fetch ${mode} from url ${url}`)
 
-
+            // create a promise to return once the call is actually done
             let fetchPromise
             try {
                 fetchPromise = await new Promise((resolve, reject) => {
                     fetch(url)
-                    .then(res => res.json())
-                    .then(resolve)
-                    .catch(reject)
+                        .then(res => res.json())
+                        .then(resolve)
+                        .catch(reject)
                 })
             } catch (error) {
-                console.log(`%c couldn't load from ${target}. Got ${error}`,"color:red; font-weight:bold;")
+                console.log(`%c couldn't load from ${target}. Got ${error}`, "color:red; font-weight:bold;")
                 console.table(error)
                 // if we got the Random error, we just try again
-                console.log(`%c retrying...`,"color:red; font-weight:bold;")
-                return this.connect(target,mode)
+                console.log(`%c retrying...`, "color:red; font-weight:bold;")
+                return this.connect(target, mode)
             }
             // return promise for actual data
             return fetchPromise
-    
-        }   
+
+        }
     }
 }
 

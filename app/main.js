@@ -663,12 +663,15 @@ const handleArcadeParameters = async function () {
 
     // clean up view
     let element = unloadPlayboard()
+
+    // prepare emojis to choose
     let list = ''
 
     for (i = 0; i < emojiData.length; i++) {
         list += `<option>${emojiData[i]}</option>`
     }
 
+    // decide which form to show dending on the play
     if (ownedGame) {
 
         let playtimeToBeat = recordToOwn.initialPlaytime
@@ -762,11 +765,10 @@ const submitOwnedPlayerRecord = function () {
         fasterTime: fasterTimeDelivered,
         emoji: recordToOwn.emoji
     }
-    console.log("%c PLAYER RECORD TO OWN!!!!", "color:yellow; font-weight:bold;")
-    console.table(player)
-
+   
+    // update the player record
     apiDB.connect("player", "PUT", player)
-    //apiDB.connect("player", "POST", player)
+    
 
     // load leaderboard
     loadLeaderboard(player)
@@ -775,12 +777,8 @@ const submitOwnedPlayerRecord = function () {
 }
 
 const submitPlayerRecord = function () {
-
-    let initialForm = document.getElementById('initialPlayerRecordForm')
-    console.log("initalForm element = ")
-    console.table(initialForm)
-
-
+    
+    // get all the necessary information
     let nameOfInitialPlayer = document.getElementById('initialPlayerName').value.toString();
     let initialMessageFromPlayer = document.getElementById('initialMessageInput').value.toString();
     let chosenEmoji = document.getElementById('initialEmojiInput').value.toString();
@@ -791,7 +789,7 @@ const submitPlayerRecord = function () {
     console.log("initialMessageInput: ", initialMessageFromPlayer)
     console.log("initialEmojiInput: ", chosenEmoji)
 
-    // store message to DB
+    // prepare the player record object
     let player = {
         id: randomID,
         playername: nameOfInitialPlayer,
@@ -801,7 +799,8 @@ const submitPlayerRecord = function () {
         fasterTime: null,
         emoji: chosenEmoji
     }
-    //apiDB.connect("player","PUT",player)
+    
+    // save new player record
     apiDB.connect("player", "POST", player)
 
     // load leaderboard
@@ -820,31 +819,27 @@ const loadLeaderboard = async function (currentPlayer = '') {
     let recordsAsSet = new Set(playerRecordsJSON)
     allPlayerRecords = Array.from(recordsAsSet).map(JSON.parse)
 
-    console.table(allPlayerRecords)
-
+    // sort the leaderboard model based on playtime
     let leaderboard = []
     leaderboard = allPlayerRecords.sort((r1, r2) => {
         return r1.initialPlaytime - r2.initialPlaytime
     })
 
     // playtime to show
-
-
     leaderboard.forEach(entry => {
         let playtimeToShow = entry.initialPlaytime
         entry.isOwned = false
         entry.textToShow = entry.ownedMessage
 
+        // if a player was owned there's a faster playtime stored in the record
         if (entry.fasterTime != null && Number(entry.initialPlaytime) > Number(entry.fasterTime)) {
-            console.log("%c true faster time", "color:green")
-
-            //playtimeToShow = entry.fasterTime
+            
             entry.isOwned = true
             entry.textToShow = entry.ownedMessage
 
         }
 
-
+        // display time in a nice mm:ss format
         let minutes = Math.floor(playtimeToShow / 60000)
         minutes = ("0" + minutes).slice(-2)
         let seconds = ((playtimeToShow % 60000) / 1000).toFixed(0)
@@ -853,10 +848,11 @@ const loadLeaderboard = async function (currentPlayer = '') {
         entry.time = playtimeDisplayed.split(".", 1).toString()
 
     });
-    //console.table(leaderboard)
-
+    
+    // reset the view
     let element = unloadPlayboard()
 
+    // bake a nice front end
     let recordHTML = `  <h2>Leaderboard</h2>
     <div id="leaderboardtext1">Welcome to the leaderboard of Point Destroyer. Here you can see the time and messages of the other players. If you want, you can try to own a player with a better score than you.</div>
     <div id="leaderboardtext2">If you manage to beat their time, you can rewrite their message and change their coat of arms. Good luck and have fun owning people or play again for a better time.</div>
@@ -995,17 +991,3 @@ const reloadContainer = function () {
 hideButton("next-level-button");
 hideButton("reload-board-button");
 
-// FOR TESTING
-/*
-let bilbo = 
-{
-    "id": "9349553567702911lefthanded",
-    "playername": "lefthanded",
-    "initialMessage": "slow start. fast finish.",
-    "ownedMessage": "",
-    "initialPlaytime": "284057.1000000015",
-    "fasterTime": null,
-    "emoji": "🩸"
-}
-loadLeaderboard(bilbo)*/
-//loadLeaderboard()
